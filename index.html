@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cute Real-Time Clock</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Inter font for a cute look */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fce4ec; /* Light Pink */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbar from hearts */
+        }
+        .heart {
+            position: absolute;
+            font-size: 2rem; /* Size of hearts */
+            color: #ef4444; /* Red */
+            animation: float 6s infinite ease-in-out;
+            pointer-events: none; /* Allows clicks to pass through */
+            z-index: 0; /* Behind clock content */
+        }
+
+        /* Animation for floating hearts */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            50% { transform: translateY(-20px) rotate(5deg); opacity: 0.8; }
+        }
+        .heart:nth-child(2n) { animation-duration: 7s; animation-delay: -1s; }
+        .heart:nth-child(3n) { animation-duration: 5s; animation-delay: -2s; }
+        .heart:nth-child(4n) { animation-duration: 8s; animation-delay: -3s; }
+        .heart:nth-child(5n) { animation-duration: 6.5s; animation-delay: -0.5s; }
+
+        /* Styles for the settings modal */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+            backdrop-filter: blur(5px); /* Optional blur effect */
+        }
+    </style>
+</head>
+<body class="relative">
+    <!-- Floating Hearts Decoration -->
+    <div class="heart" style="top: 10%; left: 15%;">❤️</div>
+    <div class="heart" style="top: 25%; right: 20%;">❤️</div>
+    <div class="heart" style="bottom: 15%; left: 30%;">❤️</div>
+    <div class="heart" style="top: 40%; left: 5%;">❤️</div>
+    <div class="heart" style="bottom: 5%; right: 10%;">❤️</div>
+    <div class="heart" style="top: 50%; right: 35%;">❤️</div>
+    <div class="heart" style="bottom: 30%; left: 45%;">❤️</div>
+    <div class="heart" style="top: 20%; left: 40%;">💖</div>
+    <div class="heart" style="bottom: 20%; right: 40%;">💖</div>
+
+    <div class="flex flex-col items-center justify-center p-6 bg-pink-100 rounded-3xl shadow-xl z-10 w-11/12 max-w-md md:max-w-lg lg:max-w-xl">
+        <!-- Kept h1 hidden as requested to make it look like a regular clock -->
+        <h1 class="hidden"></h1>
+
+        <div id="clock" class="flex justify-center items-center space-x-3 md:space-x-4 lg:space-x-6 mb-8">
+            <div class="flex flex-col items-center p-3 md:p-4 bg-white rounded-xl shadow-md">
+                <span id="hours" class="text-5xl md:text-6xl lg:text-7xl font-bold text-pink-700">00</span>
+                <span class="text-sm md:text-base text-gray-500 mt-1">Hours</span>
+            </div>
+            <div class="text-pink-600 text-5xl md:text-6xl lg:text-7xl font-bold">:</div>
+            <div class="flex flex-col items-center p-3 md:p-4 bg-white rounded-xl shadow-md">
+                <span id="minutes" class="text-5xl md:text-6xl lg:text-7xl font-bold text-pink-700">00</span>
+                <span class="text-sm md:text-base text-gray-500 mt-1">Minutes</span>
+            </div>
+            <div class="text-pink-600 text-5xl md:text-6xl lg:text-7xl font-bold">:</div>
+            <div class="flex flex-col items-center p-3 md:p-4 bg-white rounded-xl shadow-md">
+                <span id="seconds" class="text-5xl md:text-6xl lg:text-7xl font-bold text-pink-700">00</span>
+                <span class="text-sm md:text-base text-gray-500 mt-1">Seconds</span>
+            </div>
+        </div>
+        <div id="ampm" class="text-4xl md:text-5xl lg:text-6xl font-bold text-pink-700 mt-2 hidden"></div>
+    </div>
+
+    <!-- Button to open settings menu -->
+    <button
+        id="openSettingsBtn"
+        class="fixed bottom-4 right-4 p-4 bg-pink-600 text-white rounded-full shadow-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 transition duration-200 ease-in-out transform hover:scale-110 z-20"
+        title="Open Settings"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.942 3.331.83 2.232 2.232.783.783.783 2.209 0 2.992-1.107 1.107-1.107 2.232 0 3.339.942 1.543-.83 3.331-2.232 2.232a1.724 1.724 0 00-1.066 2.573c-1.756.426-1.756 2.924 0 3.35a1.724 1.724 0 001.066 2.573c-1.543-.942-3.331.83-2.232 2.232a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.942-3.331-.83-2.232-2.232-.783-.783-.783-2.209 0-2.992 1.107-1.107 1.107-2.232 0-3.339-.942-1.543.83-3.331 2.232-2.232a1.724 1.724 0 001.066-2.573c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573-1.066z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+    </button>
+
+    <!-- Settings Modal (hidden by default) -->
+    <div id="settingsModal" class="fixed inset-0 modal-overlay flex items-center justify-center p-4 hidden z-30">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center space-y-6 relative w-11/12 max-w-sm md:max-w-md">
+            <h2 class="text-2xl font-bold text-pink-700">Clock Settings</h2>
+            <button
+                id="closeSettingsBtn"
+                class="absolute top-3 right-3 p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors"
+                title="Close"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <div class="flex flex-col items-center space-y-4 w-full">
+                <label for="setTimeInput" class="text-gray-600 font-medium">Choose your starting time:</label>
+                <input
+                    type="time"
+                    id="setTimeInput"
+                    class="p-3 border-2 border-pink-300 rounded-lg text-xl text-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 w-full text-center"
+                    value="00:00"
+                >
+
+                <label class="text-gray-600 font-medium mt-4">Time Format:</label>
+                <div class="flex space-x-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="timeFormat" value="24" class="form-radio text-pink-600 h-5 w-5" checked>
+                        <span class="ml-2 text-gray-700">24 Hour</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="timeFormat" value="12" class="form-radio text-pink-600 h-5 w-5">
+                        <span class="ml-2 text-gray-700">12 Hour</span>
+                    </label>
+                </div>
+
+                <button
+                    id="setInitialTimeBtn"
+                    class="px-6 py-3 bg-pink-600 text-white font-semibold rounded-lg shadow-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 transition duration-200 ease-in-out transform hover:scale-105 w-full"
+                >
+                    Apply Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const hoursSpan = document.getElementById('hours');
+        const minutesSpan = document.getElementById('minutes');
+        const secondsSpan = document.getElementById('seconds');
+        const ampmSpan = document.getElementById('ampm'); // New element for AM/PM
+        const setTimeInput = document.getElementById('setTimeInput');
+        const setInitialTimeBtn = document.getElementById('setInitialTimeBtn');
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const timeFormatRadios = document.querySelectorAll('input[name="timeFormat"]'); // Get all radio buttons
+
+        let clockInterval;
+        let displayOffsetSeconds = 0; // Offset in seconds to simulate the fake time
+        let is12HourFormat = false; // Default to 24-hour format
+
+        // Function to update the displayed clock time
+        function updateClock() {
+            const now = new Date();
+            // Get current time in seconds since midnight (actual time)
+            const currentActualSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
+            // Apply the offset to get the displayed seconds
+            let displayedTotalSeconds = currentActualSeconds + displayOffsetSeconds;
+
+            // Handle wrap-around for multiple days (e.g., if offset makes it negative or > 24h)
+            // Ensure displayedTotalSeconds is always positive and within a 24-hour cycle
+            displayedTotalSeconds = (displayedTotalSeconds % (24 * 3600) + (24 * 3600)) % (24 * 3600);
+
+            // Calculate hours, minutes, and seconds from the displayed total seconds
+            let displayHours = Math.floor(displayedTotalSeconds / 3600);
+            const displayMinutes = Math.floor((displayedTotalSeconds % 3600) / 60);
+            const displaySeconds = displayedTotalSeconds % 60;
+            let ampm = '';
+
+            // Apply 12-hour format logic if selected
+            if (is12HourFormat) {
+                ampm = displayHours >= 12 ? 'PM' : 'AM';
+                displayHours = displayHours % 12;
+                displayHours = displayHours === 0 ? 12 : displayHours; // 0 o'clock becomes 12 AM/PM
+                ampmSpan.classList.remove('hidden'); // Show AM/PM
+                ampmSpan.textContent = ampm;
+            } else {
+                ampmSpan.classList.add('hidden'); // Hide AM/PM for 24 hour
+            }
+
+            // Update the display with leading zeros
+            hoursSpan.textContent = String(displayHours).padStart(2, '0');
+            minutesSpan.textContent = String(displayMinutes).padStart(2, '0');
+            secondsSpan.textContent = String(displaySeconds).padStart(2, '0');
+        }
+
+        // Function to set the initial fake time and start the clock
+        function setInitialDisplayTime() {
+            const timeString = setTimeInput.value; // Get the time from the input (e.g., "00:00")
+            if (!timeString) {
+                console.error("No time entered for initial display.");
+                // If no time is entered, default to showing current actual time
+                displayOffsetSeconds = 0;
+            } else {
+                const [inputHours, inputMinutes] = timeString.split(':').map(Number);
+                const now = new Date();
+                const currentActualSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+                const desiredInitialSeconds = inputHours * 3600 + inputMinutes * 60;
+
+                // Calculate the offset needed to display desiredInitialSeconds
+                displayOffsetSeconds = desiredInitialSeconds - currentActualSeconds;
+            }
+
+            // Get selected time format
+            is12HourFormat = document.querySelector('input[name="timeFormat"]:checked').value === '12';
+
+            // Clear any existing interval to prevent multiple clock updates running
+            if (clockInterval) {
+                clearInterval(clockInterval);
+            }
+
+            // Start the clock immediately and then update every second
+            updateClock(); // Initial call to display time immediately
+            clockInterval = setInterval(updateClock, 1000); // Update every 1 second
+
+            // Close the modal after setting the time
+            settingsModal.classList.add('hidden');
+        }
+
+        // Event listener for the "Apply Settings" button inside the modal
+        setInitialTimeBtn.addEventListener('click', setInitialDisplayTime);
+
+        // Event listeners for opening and closing the settings modal
+        openSettingsBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('hidden');
+            // Ensure the time input value reflects the currently displayed "fake" time when opened
+            const now = new Date();
+            const currentActualSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+            const displayedTotalSeconds = (currentActualSeconds + displayOffsetSeconds % (24 * 3600) + (24 * 3600)) % (24 * 3600);
+            const displayHours = Math.floor(displayedTotalSeconds / 3600);
+            const displayMinutes = Math.floor((displayedTotalSeconds % 3600) / 60);
+            setTimeInput.value = `${String(displayHours).padStart(2, '0')}:${String(displayMinutes).padStart(2, '0')}`;
+
+            // Set the correct radio button based on current format
+            document.querySelector(`input[name="timeFormat"][value="${is12HourFormat ? '12' : '24'}"]`).checked = true;
+        });
+
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsModal.classList.add('hidden');
+        });
+
+        // Initial setup when the page loads
+        window.onload = function() {
+            // Set an initial time (e.g., 00:00) and format (default to 24-hour) when the page loads
+            setInitialDisplayTime();
+        };
+
+        // Add some more floating hearts for visual appeal
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.body;
+            const numAdditionalHearts = 10;
+            const heartEmojis = ['❤️', '💖']; // Array of heart emojis
+
+            for (let i = 0; i < numAdditionalHearts; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                // Randomly select a heart emoji
+                heart.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+                heart.style.left = `${Math.random() * 100}%`;
+                heart.style.top = `${Math.random() * 100}%`;
+                // Randomize animation delay and duration slightly for more natural movement
+                heart.style.animationDelay = `-${Math.random() * 5}s`;
+                heart.style.animationDuration = `${5 + Math.random() * 3}s`; // 5 to 8 seconds
+                body.appendChild(heart);
+            }
+        });
+    </script>
+</body>
+</html>
